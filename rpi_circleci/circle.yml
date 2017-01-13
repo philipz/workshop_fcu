@@ -1,0 +1,25 @@
+machine:
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker info
+    - docker -v
+    - docker build -t philipz/rpi-raspbian-mqtt .
+test:
+  override:
+    - curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-`uname -s`-`uname -m` > ./docker-compose
+    - chmod +x ./docker-compose
+    - ./docker-compose -v
+    - ./docker-compose up -d
+    - ./docker-compose ps
+    - ./test.sh
+deployment:
+  hub:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push philipz/rpi-raspbian-mqtt
